@@ -37,7 +37,7 @@ if(isset($_POST['source']) && isset($_POST['user'])){
       <p>Server and client in a symbiotic relationship.</p>
     </header>
     <form>
-      <p>This is a sample app to demonstrate how serverside code can be used to alleviate the JS-required constraint for the retrieval of public resources on <a href="https://github.com/solid">Solid</a> servers. Basically the server tries to fetch the resource and if it can't get it because there's access control set, the clientside JS tries to authenticate you then fetch it. So JS is required <em>only</em> for non-public resources, which is better than being required for everything.</p>
+      <p>This is a sample app to demonstrate how serverside code can be used to alleviate the JS-required constraint for the retrieval of public resources on <a href="https://github.com/solid">Solid</a> servers. Basically the server tries to fetch the resource and if it can't get it because there's access control set, the clientside JS tries to authenticate you then fetches it and posts it back to the server. So JS is required <em>only</em> for non-public resources, which is better than being required for everything.</p>
       <p><label for="uri">URI of something to display</label> <input type="text" name="uri" placeholder="https://solid.pod/path/to/something" id="uri" <?=isset($_GET['uri']) ? 'value="'.$_GET['uri'].'"' : ''?> /></p>
       <p><input type="submit" id="get" value="Get" /></p>
     </form>
@@ -107,8 +107,12 @@ if(isset($_POST['source']) && isset($_POST['user'])){
             post(window.location.href, {status: status, ct: ct, source: data, user: user})
           }
         ).catch(
-          function(err) {
-            console.log(err)
+          function(response) {
+            var user = '[pending solid.js issue #73]'
+            var status = response.status + ' (' + response.xhr.statusText + ')'
+            var ct = 'n/a'
+            var data = response.xhr.response
+            post(window.location.href, {status: status, ct: ct, source: data, user: user})
           }
         )
       }
@@ -122,6 +126,7 @@ if(isset($_POST['source']) && isset($_POST['user'])){
             break
           case "401": case "403":
             console.log('trying with auth')
+            document.getElementById('user').innerText = '..Trying again with authentication..'
             getResource(url)
             break
           default:
